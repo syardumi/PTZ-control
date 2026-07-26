@@ -1,0 +1,16 @@
+{
+  "name": "ptz-camera-control",
+  "version": "1.0.0",
+  "description": "Local network web control panel for a PTZOptics Move SE (PT20X-SE-xx-G3) PTZ camera",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

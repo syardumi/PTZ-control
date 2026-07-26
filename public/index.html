@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Move SE Control &middot; PT20X-SE-G3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-glyph" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+      </span>
+      <div class="brand-text">
+        <h1>MOVE&nbsp;SE</h1>
+        <p>PT20X&#8209;SE&#8209;G3 &middot; 20&times; zoom</p>
+      </div>
+    </div>
+
+    <div class="status-pill" id="statusPill" data-state="checking">
+      <span class="status-dot"></span>
+      <span id="statusText">Checking&hellip;</span>
+    </div>
+
+    <button class="icon-btn" id="settingsBtn" type="button" aria-label="Open settings">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.63-.94L14.4 2.6a.5.5 0 0 0-.5-.4h-3.8a.5.5 0 0 0-.5.4l-.36 2.42a7.3 7.3 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.6 8.54a.5.5 0 0 0 .12.64l2.03 1.58a7.14 7.14 0 0 0-.06.94c0 .32.02.63.06.94L2.72 14.2a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.4 1.05.72 1.63.94l.36 2.42a.5.5 0 0 0 .5.4h3.8a.5.5 0 0 0 .5-.4l.36-2.42a7.3 7.3 0 0 0 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
+    </button>
+  </header>
+
+  <div class="pad-strip" id="padStrip" data-state="disconnected">
+    <div class="pad-status-row">
+      <span class="pad-dot"></span>
+      <span id="padStatus">No controller &mdash; pair via Bluetooth, then press any button</span>
+      <span class="pad-sensitivity">Sensitivity&nbsp;<output id="padSensitivity">100%</output></span>
+    </div>
+    <div class="pad-legend">
+      <span><b>L&nbsp;stick</b>&nbsp;pan/tilt</span>
+      <span><b>R&nbsp;stick&nbsp;&#8597;</b>&nbsp;focus</span>
+      <span><b>L2/R2</b>&nbsp;zoom</span>
+      <span><b>D&#8209;pad</b>&nbsp;presets&nbsp;1&ndash;4</span>
+      <span><b>&#9633;</b>&nbsp;preset&nbsp;5</span>
+      <span><b>&#10005;</b>&nbsp;stop</span>
+      <span><b>&#9675;</b>&nbsp;home</span>
+      <span><b>&#9651;</b>&nbsp;focus&nbsp;lock</span>
+      <span><b>L1/R1</b>&nbsp;sensitivity</span>
+      <span><b>Options</b>&nbsp;settings</span>
+    </div>
+  </div>
+
+  <main class="layout">
+
+    <section class="preview-panel">
+      <div class="viewfinder" id="viewfinder">
+        <img id="previewImg" alt="" />
+        <div class="tally" id="tally"><span class="tally-dot"></span>LIVE</div>
+        <div class="viewfinder-empty" id="previewEmpty">
+          <p>No preview yet</p>
+          <p class="muted">Add the camera&rsquo;s IP in Settings to connect.</p>
+        </div>
+      </div>
+      <p class="preview-caption" id="previewCaption">&nbsp;</p>
+    </section>
+
+    <section class="controls-panel">
+
+      <div class="control-card dpad-card">
+        <div class="card-label">Pan / Tilt</div>
+        <div class="dpad" id="dpad">
+          <button class="dpad-btn pos-nw" data-direction="leftup" aria-label="Pan left, tilt up"><svg viewBox="0 0 24 24"><path d="M18 18 6 6m0 0v9m0-9h9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="dpad-btn pos-n" data-direction="up" aria-label="Tilt up"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="dpad-btn pos-ne" data-direction="rightup" aria-label="Pan right, tilt up"><svg viewBox="0 0 24 24"><path d="M6 18 18 6m0 0v9m0-9h-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="dpad-btn pos-w" data-direction="left" aria-label="Pan left"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="dpad-hub" id="stopBtn" type="button" aria-label="Stop movement">STOP</button>
+          <button class="dpad-btn pos-e" data-direction="right" aria-label="Pan right"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="dpad-btn pos-sw" data-direction="leftdown" aria-label="Pan left, tilt down"><svg viewBox="0 0 24 24"><path d="M18 6 6 18m0 0v-9m0 9h9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="dpad-btn pos-s" data-direction="down" aria-label="Tilt down"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="dpad-btn pos-se" data-direction="rightdown" aria-label="Pan right, tilt down"><svg viewBox="0 0 24 24"><path d="M6 6 18 18m0 0v-9m0 9h-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="mini-actions">
+          <button class="mini-btn" id="homeBtn" type="button">Home</button>
+          <button class="mini-btn" id="resetBtn" type="button">Recalibrate</button>
+        </div>
+        <div class="sliders">
+          <label class="slider-row">
+            <span>Pan speed</span>
+            <input type="range" id="panSpeed" min="1" max="24" value="12" />
+            <output id="panSpeedOut">12</output>
+          </label>
+          <label class="slider-row">
+            <span>Tilt speed</span>
+            <input type="range" id="tiltSpeed" min="1" max="20" value="10" />
+            <output id="tiltSpeedOut">10</output>
+          </label>
+        </div>
+      </div>
+
+      <div class="control-card zoom-focus-card">
+        <div class="rocker-block">
+          <div class="card-label">Zoom</div>
+          <div class="rocker" id="zoomRocker">
+            <button class="rocker-half" data-zoom="in" aria-label="Zoom in">+</button>
+            <button class="rocker-half" data-zoom="out" aria-label="Zoom out">&minus;</button>
+          </div>
+          <label class="slider-row">
+            <span>Speed</span>
+            <input type="range" id="zoomSpeed" min="1" max="7" value="4" />
+            <output id="zoomSpeedOut">4</output>
+          </label>
+        </div>
+        <div class="rocker-block">
+          <div class="card-label">Focus</div>
+          <div class="rocker" id="focusRocker">
+            <button class="rocker-half" data-focus="in" aria-label="Focus far">Far</button>
+            <button class="rocker-half" data-focus="out" aria-label="Focus near">Near</button>
+          </div>
+          <div class="focus-lock-row">
+            <label class="slider-row">
+              <span>Speed</span>
+              <input type="range" id="focusSpeed" min="1" max="7" value="4" />
+              <output id="focusSpeedOut">4</output>
+            </label>
+            <button class="mini-btn toggle" id="focusLockBtn" type="button" aria-pressed="false">Lock focus</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-card presets-card">
+        <div class="card-label">Presets</div>
+        <div class="presets-grid" id="presetsGrid"><!-- populated by app.js --></div>
+      </div>
+
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="settingsOverlay" hidden>
+  <div class="settings-panel" role="dialog" aria-modal="true" aria-label="Camera settings">
+    <div class="settings-header">
+      <h2>Camera settings</h2>
+      <button class="icon-btn" id="closeSettingsBtn" type="button" aria-label="Close settings">&times;</button>
+    </div>
+    <form id="settingsForm">
+      <div class="discovery-block">
+        <div class="discovery-header">
+          <span>Discovered on your network</span>
+          <button type="button" class="mini-btn" id="rescanBtn">Scan again</button>
+        </div>
+        <div class="discovery-list" id="discoveryList">
+          <p class="discovery-empty" id="discoveryEmpty">Scanning&hellip;</p>
+        </div>
+      </div>
+
+      <label class="field">
+        <span>Camera IP address</span>
+        <input type="text" id="cfgIp" placeholder="192.168.1.50" required />
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span>HTTP port</span>
+          <input type="number" id="cfgHttpPort" placeholder="80" min="1" max="65535" />
+        </label>
+        <label class="field">
+          <span>RTSP port</span>
+          <input type="number" id="cfgRtspPort" placeholder="554" min="1" max="65535" />
+        </label>
+      </div>
+      <div class="field-row">
+        <label class="field">
+          <span>Username</span>
+          <input type="text" id="cfgUsername" placeholder="admin" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" id="cfgPassword" placeholder="" autocomplete="new-password" />
+        </label>
+      </div>
+      <label class="field">
+        <span>Preview stream</span>
+        <select id="cfgPreviewStream">
+          <option value="1">Stream 1 &middot; HD (sharper, more latency)</option>
+          <option value="2">Stream 2 &middot; SD (smoother, recommended)</option>
+        </select>
+      </label>
+      <p class="field-hint" id="settingsHint">&nbsp;</p>
+      <div class="settings-actions">
+        <button type="button" class="mini-btn" id="testConnectionBtn">Test connection</button>
+        <button type="submit" class="primary-btn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="/app.js"></script>
+<script src="/gamepad.js"></script>
+</body>
+</html>
