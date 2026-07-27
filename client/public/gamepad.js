@@ -22,7 +22,8 @@
 //
 // This file is intentionally standalone — it talks to the same /api/ptz/*
 // routes the on-screen controls use, so it doesn't need to reach into
-// app.js at all.
+// app.js at all (it does depend on the tiny serverBase.js, loaded before
+// this file, for window.getServerBase()).
 
 (() => {
   'use strict';
@@ -47,7 +48,7 @@
   const $ = (id) => document.getElementById(id);
 
   function fireAndForget(path) {
-    fetch(path).catch(() => {});
+    fetch(window.getServerBase() + path).catch(() => {});
   }
 
   function setStatus(connected, label, mappingWarning) {

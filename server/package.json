@@ -1,0 +1,26 @@
+{
+  "name": "ptz-camera-server",
+  "version": "1.0.0",
+  "description": "Backend that talks to a PTZOptics Move SE camera over its HTTP-CGI interface, stores settings/presets/thumbnails, and exposes an API for the client app.",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "build:sidecar": "node scripts/build-sidecar.js",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.21.0",
+    "@tauri-apps/cli": "^2.11.4"
+  }
+}

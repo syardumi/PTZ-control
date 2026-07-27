@@ -1,22 +1,23 @@
 #!/bin/bash
-# Double-click this file in Finder to start the Move SE control panel —
-# or run it from Terminal with: ./start.command
+# Double-click this file in Finder to start the PTZ client UI and open it
+# in your browser — or run it from Terminal with: ./start.command
 #
 # First time only: Finder may warn that this is "from an unidentified
 # developer." Right-click the file and choose Open (instead of double-
 # clicking) to get past that, or open Terminal, cd into this folder, and
 # run: bash start.command — that bypasses the warning entirely.
 #
-# This window doubles as the server's log. Closing it (or Ctrl+C) stops
-# the camera control panel.
+# This window doubles as the client's log. Closing it (or Ctrl+C) stops
+# it. Make sure the PTZ server is already running (see server/start.command
+# in the sibling folder) — the client's Settings needs its address.
 
 set -u
 cd "$(dirname "$0")" || exit 1
 
-PORT="${PORT:-4790}"
+PORT="${PORT:-4791}"
 
-echo "Move SE control panel"
-echo "----------------------"
+echo "PTZ client"
+echo "-----------"
 echo
 
 pause_and_exit() {
@@ -25,27 +26,12 @@ pause_and_exit() {
   exit 1
 }
 
-# --- Node.js present, and new enough for the built-in fetch() we use ----
 if ! command -v node >/dev/null 2>&1; then
   echo "Node.js isn't installed."
   echo "Install it from https://nodejs.org (or run: brew install node),"
   echo "then double-click this script again."
   osascript -e 'display alert "Node.js required" message "Install Node.js from nodejs.org (or run: brew install node), then double-click this script again." as critical' >/dev/null 2>&1
   pause_and_exit
-fi
-
-NODE_MAJOR=$(node -e "console.log(process.versions.node.split('.')[0])" 2>/dev/null)
-if [ -z "$NODE_MAJOR" ] || [ "$NODE_MAJOR" -lt 18 ]; then
-  echo "Node.js 18 or newer is required (found $(node --version))."
-  echo "Upgrade from https://nodejs.org or with: brew upgrade node"
-  pause_and_exit
-fi
-
-# --- ffmpeg is optional — smoother live preview if it's there ----------
-if ! command -v ffmpeg >/dev/null 2>&1; then
-  echo "Note: ffmpeg isn't installed, so the live preview will use the"
-  echo "slower snapshot mode. For smooth video: brew install ffmpeg"
-  echo
 fi
 
 # --- Already running? Just open the browser instead of double-starting -
@@ -66,7 +52,7 @@ if [ ! -d node_modules ]; then
   echo
 fi
 
-# --- Open the browser automatically once the server responds ------------
+# --- Open the browser automatically once the client responds ------------
 (
   for _ in $(seq 1 40); do
     sleep 0.5
@@ -77,7 +63,7 @@ fi
   done
 ) &
 
-echo "Starting the server — leave this window open while you use the camera panel."
+echo "Starting the client on port $PORT — leave this window open."
 echo "Close this window (or press Ctrl+C) to stop it."
 echo
 PORT="$PORT" npm start

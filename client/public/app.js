@@ -9,7 +9,7 @@
 
   async function api(path, { quiet = false } = {}) {
     try {
-      const res = await fetch(path);
+      const res = await fetch(getServerBase() + path);
       let data = null;
       try { data = await res.json(); } catch (_) { /* no body */ }
       if (!res.ok) {
@@ -48,7 +48,7 @@
   async function checkStatus() {
     const pill = $('statusPill');
     try {
-      const res = await fetch('/api/status');
+      const res = await fetch(getServerBase() + '/api/status');
       const data = await res.json();
       if (data.reachable) {
         pill.dataset.state = 'online';
@@ -111,7 +111,7 @@
     img.onload = markFrameLoaded;
     img.onerror = () => showTally(false);
     stopSnapshotPolling();
-    const tick = () => { img.src = `/api/snapshot?t=${Date.now()}`; };
+    const tick = () => { img.src = `${getServerBase()}/api/snapshot?t=${Date.now()}`; };
     tick();
     snapshotTimer = setInterval(tick, 800);
     $('previewCaption').textContent = 'Preview: snapshot refresh (install ffmpeg for smoother live video)';
@@ -130,7 +130,7 @@
     const img = $('previewImg');
     img.onload = markFrameLoaded;
     img.onerror = () => fallbackToSnapshot();
-    img.src = `/api/stream?_=${streamStartedAt}`;
+    img.src = `${getServerBase()}/api/stream?_=${streamStartedAt}`;
     $('previewCaption').textContent = 'Preview: live (ffmpeg relay)';
 
     clearInterval(watchdogTimer);
@@ -278,7 +278,7 @@
   }
 
   async function postConfig(body, { quiet = false } = {}) {
-    const res = await fetch('/api/config', {
+    const res = await fetch(getServerBase() + '/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -300,6 +300,10 @@
     return '<svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5V4Zm2 2v4h8V6H7Zm0 8v6h10v-6H7Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
   }
 
+  function thumbnailUrl(preset) {
+    return `${getServerBase()}/api/presets/${preset.id}/thumbnail?v=${preset.thumbnailVersion}`;
+  }
+
   function renderPresets(presets) {
     const grid = $('presetsGrid');
     grid.innerHTML = '';
@@ -307,13 +311,20 @@
       const card = document.createElement('div');
       card.className = 'preset-card';
 
+      const thumb = document.createElement('img');
+      thumb.className = 'preset-thumb';
+      thumb.alt = '';
+      if (preset.hasThumbnail) thumb.src = thumbnailUrl(preset);
+      else thumb.classList.add('empty');
+      thumb.onerror = () => thumb.classList.add('empty');
+
       const nameInput = document.createElement('input');
       nameInput.className = 'preset-name';
       nameInput.value = preset.label;
       nameInput.maxLength = 40;
       nameInput.addEventListener('change', async () => {
         try {
-          await fetch(`/api/presets/${preset.id}`, {
+          await fetch(`${getServerBase()}/api/presets/${preset.id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ label: nameInput.value })
@@ -337,11 +348,13 @@
       saveBtn.innerHTML = saveIconSvg();
       saveBtn.addEventListener('click', async () => {
         await api(`/api/ptz/preset/save?id=${preset.id}`);
+        thumb.classList.remove('empty');
+        thumb.src = `${getServerBase()}/api/presets/${preset.id}/thumbnail?v=${Date.now()}`;
         showToast(`Saved current position to "${nameInput.value}"`);
       });
 
       actions.append(goBtn, saveBtn);
-      card.append(nameInput, actions);
+      card.append(thumb, nameInput, actions);
       grid.appendChild(card);
     });
   }
@@ -494,6 +507,7 @@
   // ------------------------------------------------------------------
 
   function openSettings() {
+    $('cfgServerBase').value = getServerBase();
     if (config) {
       $('cfgIp').value = config.ip || '';
       $('cfgHttpPort').value = config.httpPort || 80;
@@ -533,11 +547,13 @@
     $('settingsForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       try {
+        setServerBase($('cfgServerBase').value);
         await postConfig(readSettingsForm());
         showToast('Camera settings saved');
         closeSettings();
         refreshStatus();
         initPreview();
+        loadPresets();
       } catch (_) { /* toasted already */ }
     });
 
@@ -546,8 +562,9 @@
       hint.className = 'field-hint';
       hint.textContent = 'Testing\u2026';
       try {
+        setServerBase($('cfgServerBase').value);
         await postConfig(readSettingsForm(), { quiet: true });
-        const res = await fetch('/api/status');
+        const res = await fetch(getServerBase() + '/api/status');
         const data = await res.json();
         if (data.reachable) {
           hint.className = 'field-hint success';
@@ -638,6 +655,10 @@
 
     if (!config || !config.ip) {
       openSettings();
+      if (!getServerBase()) {
+        $('settingsHint').className = 'field-hint';
+        $('settingsHint').textContent = 'Enter the address of your PTZ server (e.g. http://192.168.1.20:4790), then Save.';
+      }
     }
 
     loadPresets();
@@ -646,6 +667,10 @@
     const wasOnlineAtBoot = await checkStatus();
     runDiscoveryAndMaybeReconnect(wasOnlineAtBoot);
     setInterval(refreshStatus, 6000);
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
   }
 
   document.addEventListener('DOMContentLoaded', boot);

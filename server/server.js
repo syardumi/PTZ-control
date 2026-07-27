@@ -1,14 +1,31 @@
 const express = require('express');
-const path = require('path');
+const cors = require('cors');
+const fs = require('fs');
 
 const { readConfig, readConfigSafe, writeConfig } = require('./lib/config');
 const { sendPtzCmd, sendParamCmd, getSnapshot, baseUrl } = require('./lib/cameraClient');
 const { checkFfmpegAvailable, streamMjpeg } = require('./lib/mjpegProxy');
 const { discoverCameras } = require('./lib/discovery');
+const { ensureThumbnailsDir, thumbnailPath, thumbnailInfo } = require('./lib/thumbnails');
+
+// This server is meant to stay running indefinitely on someone's Mac, so a
+// single unexpected error anywhere (a stale connection while the preview is
+// open, a network hiccup during discovery, etc.) should never be allowed to
+// take the whole thing down. Node's default behavior for an uncaught
+// exception or unhandled promise rejection is to exit the process — these
+// log the problem instead and keep serving. Individual routes below still
+// handle their own expected errors properly; this is just the last-resort
+// net for anything that slips through.
+process.on('uncaughtException', (err) => {
+  console.error('Unexpected error (server staying up):', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection (server staying up):', reason);
+});
 
 const app = express();
+app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 4790;
 
@@ -217,7 +234,11 @@ app.get('/api/ptz/focus-lock', async (req, res) => {
 // ---------------------------------------------------------------------------
 
 app.get('/api/presets', (req, res) => {
-  res.json(readConfig().presets || []);
+  const presets = readConfig().presets || [];
+  res.json(presets.map((p) => {
+    const info = thumbnailInfo(p.id);
+    return { ...p, hasThumbnail: info.exists, thumbnailVersion: info.mtimeMs };
+  }));
 });
 
 app.post('/api/presets/:id', (req, res) => {
@@ -229,13 +250,37 @@ app.post('/api/presets/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// Serves the JPEG captured the last time this preset was saved (see
+// /api/ptz/preset/save below). Not embedded in /api/presets' JSON so that
+// route stays cheap to poll.
+app.get('/api/presets/:id/thumbnail', (req, res) => {
+  const id = validatePresetId(req.params.id, res);
+  if (id === null) return;
+  const info = thumbnailInfo(id);
+  if (!info.exists) {
+    return res.status(404).json({ error: `No thumbnail saved for preset ${id} yet.` });
+  }
+  res.set('Content-Type', 'image/jpeg');
+  res.set('Cache-Control', 'no-store');
+  fs.createReadStream(thumbnailPath(id)).pipe(res);
+});
+
 app.get('/api/ptz/preset/save', async (req, res) => {
   const id = validatePresetId(req.query.id, res);
   if (id === null) return;
   const config = readConfig();
   try {
     await sendPtzCmd(config, ['posset', id]);
-    res.json({ ok: true });
+    let thumbnailSaved = false;
+    try {
+      const jpeg = await getSnapshot(config);
+      ensureThumbnailsDir();
+      fs.writeFileSync(thumbnailPath(id), jpeg);
+      thumbnailSaved = true;
+    } catch (thumbErr) {
+      console.error(`Preset ${id} saved, but capturing its thumbnail failed:`, thumbErr.message);
+    }
+    res.json({ ok: true, thumbnailSaved });
   } catch (err) {
     res.status(502).json({ error: err.message });
   }

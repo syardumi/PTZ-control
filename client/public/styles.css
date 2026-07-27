@@ -482,6 +482,19 @@ button {
   gap: 8px;
 }
 
+.preset-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.preset-thumb.empty {
+  visibility: hidden;
+}
+
 .preset-name {
   background: transparent;
   border: none;
